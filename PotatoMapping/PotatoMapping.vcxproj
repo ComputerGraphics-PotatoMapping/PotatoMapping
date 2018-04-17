@@ -123,14 +123,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\Source Files\fShader.frag" />
+    <None Include="..\Debug\fShader.frag" />
+    <None Include="..\Debug\vShader.vert" />
     <None Include="..\Source Files\glm.dsp" />
     <None Include="..\Source Files\glut32.dll" />
     <None Include="..\Source Files\Makefile.sgi" />
     <None Include="..\Source Files\Makefile.win" />
     <None Include="..\Source Files\smooth.dsp" />
     <None Include="..\Source Files\smooth.dsw" />
-    <None Include="..\Source Files\vShader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source Files\dirent32.h" />

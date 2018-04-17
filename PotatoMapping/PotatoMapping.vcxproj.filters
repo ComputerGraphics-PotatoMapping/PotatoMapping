@@ -33,10 +33,10 @@
     <None Include="..\Source Files\smooth.dsw">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\Source Files\fShader.frag">
+    <None Include="..\Debug\fShader.frag">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\Source Files\vShader.vert">
+    <None Include="..\Debug\vShader.vert">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

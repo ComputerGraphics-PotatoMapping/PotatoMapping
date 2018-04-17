@@ -512,23 +512,38 @@ motion(int x, int y)
 //Load the bitmap from the file
 void loadBitmap(const char * fileName) {
 	FILE * file = fopen(fileName, "r");
-	if (!file)
+	if (file == NULL) {
 		printf("Invalid File. \n");
+		return;
+	}
 	fread(&size, 1, sizeof(short), file);
 	fseek(file, size, SEEK_SET);
-	unsigned char * data = (unsigned char*) malloc (size);
-	fread(data, sizeof(unsigned char), size, file);
+	/*unsigned char * data = (unsigned char*) malloc (size);
+	for (int i = 0; i < size + 1; ++i) {
+		data[i] = 0;
+	}*/
+	bitmapData = new unsigned char[size];
+	//bitmapData = (unsigned char*)malloc(size);
+	//for (int i = 0; i < size; ++i) {
+	//	bitmapData[i] = 0;
+	fread(bitmapData, sizeof(unsigned char), size, file);
 	fclose(file);
 }
 
 //Load the contents from the shader files
 char * loadContents(const char * fileName) {
 	FILE * file = fopen(fileName, "r");
+	if (file == NULL) {
+		printf("File Could Not Be Found\n");
+		return NULL;
+	}
 	fseek(file, 0, SEEK_END);
 	long length = ftell(file);
 	fseek(file, 0, SEEK_SET);
 	char * final = (char *) malloc (length + 1);
-	//char * final[length + 1] = { 0 };
+	for (int i = 0; i < length + 1; ++i) {
+		final[i] = 0;
+	}
 	fread(final, 1, length, file);
 	final[length + 1] = '\0';
 	fclose(file);
@@ -611,15 +626,41 @@ main(int argc, char** argv)
 	glewInit();
 	GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
 	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	const char * vertexSource = "vShader.vert";
+	//TODO, Make sure reading correctly, Double Check
+	const char * vertexSource = loadContents("vShader.vert");
 	glShaderSource(vertexShaderID, 1, (const GLchar **)&vertexSource, NULL);
 	glCompileShader(vertexShaderID);
 
 	//Create the fragment shader
 	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	const char * fragmentSource = "fShader.frag";
+	const char * fragmentSource = loadContents("fShader.frag");
 	glShaderSource(fragmentShaderID, 1, (const GLchar **)&fragmentSource, NULL);
 	glCompileShader(fragmentShaderID);
+
+	/*
+	printf("%d\t%d\n" ,vertexSource, fragmentShaderID);
+
+	GLint compiled = 0, compiled_2 = 0;
+	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &compiled);
+	if (!compiled)
+		printf("Frag Shader Not Working, %d\n", compiled);
+	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &compiled_2);
+	if (!compiled_2)
+		printf("Vertex Shader Not Working, %d\n", compiled_2);
+
+	GLint logLength;
+	glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &logLength);
+	char* msgBuffer = (char * ) malloc (logLength);
+	glGetShaderInfoLog(fragmentShaderID, logLength, NULL, msgBuffer);
+	printf("%s\n", msgBuffer);
+	//free (msgBuffer);
+
+	glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &logLength);
+	char* msgBuffer_2 = (char *)malloc(logLength);
+	glGetShaderInfoLog(vertexShaderID, logLength, NULL, msgBuffer_2);
+	printf("%s\n", msgBuffer_2);
+	//free (msgBuffer_2);
+	*/
 
 	//Create the shader for the program
 	programShaderID = glCreateProgram();
@@ -633,20 +674,20 @@ main(int argc, char** argv)
 	glBindVertexArray(vertexArray);
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-
+	
 	//Create the buffer for the texture
 	glBufferData(GL_ARRAY_BUFFER, 8 * model->numvertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->vertices);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->normals);
 	//TODO - Acess Violation Reading Location
 	//glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->texcoords);
-
+	
 	//Get the IDs of the variables in the shader
 	GLuint position, normal, light;
 	position = glGetAttribLocation(programShaderID, "localVertex");
 	normal = glGetAttribLocation(programShaderID, "localVertexNormal");
 	light = glGetUniformLocation(programShaderID, "lightVector");
-
+	
 	//Load the Bitmap
 	loadBitmap("BrownDirt.bmp"); //Get the data for the bitmap
 	glEnable(GL_TEXTURE_2D); //Enable texture
@@ -654,7 +695,7 @@ main(int argc, char** argv)
 	glGenTextures(1, &bitmapID); //Get ID for texture
 	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapData);
-
+	/*
 	//Enable texture coordinates in the OpenGL window
 	GLuint textureCoordinateID = glGetAttribLocation(programShaderID, "openglCoor");
 	glEnableVertexAttribArray(textureCoordinateID);
@@ -684,6 +725,8 @@ main(int argc, char** argv)
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
+
+	*/
 
 	//** **//
 
