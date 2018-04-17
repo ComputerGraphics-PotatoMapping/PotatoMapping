@@ -608,14 +608,17 @@ main(int argc, char** argv)
 	//** Texture Mapping Implementation **//
 
 	//Create the vertex shader
+	glewInit();
 	GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
 	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShaderID, 1, (const GLchar **) & "vShader.vsh", NULL);
+	const char * vertexSource = "vShader.vert";
+	glShaderSource(vertexShaderID, 1, (const GLchar **)&vertexSource, NULL);
 	glCompileShader(vertexShaderID);
 
 	//Create the fragment shader
 	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShaderID, 1, (const GLchar **) & "fShader.fsh", NULL);
+	const char * fragmentSource = "fShader.frag";
+	glShaderSource(fragmentShaderID, 1, (const GLchar **)&fragmentSource, NULL);
 	glCompileShader(fragmentShaderID);
 
 	//Create the shader for the program
@@ -635,7 +638,8 @@ main(int argc, char** argv)
 	glBufferData(GL_ARRAY_BUFFER, 8 * model->numvertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->vertices);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->normals);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->texcoords);
+	//TODO - Acess Violation Reading Location
+	//glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->texcoords);
 
 	//Get the IDs of the variables in the shader
 	GLuint position, normal, light;
