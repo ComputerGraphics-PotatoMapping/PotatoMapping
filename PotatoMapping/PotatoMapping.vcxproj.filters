@@ -55,10 +55,10 @@
     <ClCompile Include="..\Source Files\gltb.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source Files\smooth.c">
+    <ClCompile Include="..\Source Files\glm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source Files\glm.c">
+    <ClCompile Include="..\Source Files\smooth.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

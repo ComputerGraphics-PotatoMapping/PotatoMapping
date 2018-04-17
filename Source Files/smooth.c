@@ -508,24 +508,36 @@ motion(int x, int y)
     glutPostRedisplay();
 }
 
-
 //Load the bitmap from the file
-void loadBitmap(const char * fileName) {
+void loadBitmap(const char * fileName, int * width, int * height, int * size) {
 	FILE * file = fopen(fileName, "r");
 	if (file == NULL) {
 		printf("Invalid File. \n");
 		return;
 	}
+
+	int picWidth = -1, picHeight = -1, totalSize = -1;
+	fread(&picWidth, 1, sizeof(int), file);
+	printf("bitmap_width is: %d\n", picWidth);
+	fread(&picHeight, 1, sizeof(int), file);
+	printf("bitmap_height is: %d\n", picHeight);
+	fread(&totalSize, 1, sizeof(int), file);
+	printf("bitmap_data_size is: %d\n", totalSize);
+
+	*width = picWidth;
+	*height = picHeight;
+	*size = totalSize;
+
 	fread(&size, 1, sizeof(short), file);
 	fseek(file, size, SEEK_SET);
 	/*unsigned char * data = (unsigned char*) malloc (size);
 	for (int i = 0; i < size + 1; ++i) {
 		data[i] = 0;
 	}*/
-	bitmapData = new unsigned char[size];
-	//bitmapData = (unsigned char*)malloc(size);
+	//bitmapData = new unsigned char[size];
+	bitmapData = (unsigned char*)malloc(size);
 	//for (int i = 0; i < size; ++i) {
-	//	bitmapData[i] = 0;
+	//	bitmapData[i] = '\0';
 	fread(bitmapData, sizeof(unsigned char), size, file);
 	fclose(file);
 }
@@ -689,12 +701,14 @@ main(int argc, char** argv)
 	light = glGetUniformLocation(programShaderID, "lightVector");
 	
 	//Load the Bitmap
-	loadBitmap("BrownDirt.bmp"); //Get the data for the bitmap
+	int width = -1, height = -1, size = -1;
+	loadBitmap("BrownDirt.bmp", &width, &height, &size); //Get the data for the bitmap
 	glEnable(GL_TEXTURE_2D); //Enable texture
 	GLuint bitmapID;
 	glGenTextures(1, &bitmapID); //Get ID for texture
 	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapData);
+	
 	/*
 	//Enable texture coordinates in the OpenGL window
 	GLuint textureCoordinateID = glGetAttribLocation(programShaderID, "openglCoor");
