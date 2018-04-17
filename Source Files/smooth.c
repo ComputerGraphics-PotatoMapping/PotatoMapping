@@ -44,6 +44,8 @@ int size = -1;
 unsigned char * bitmapData;
 //Original Colof of each pixel of the bitmap filename
 GLubyte * bitmapColor;
+//Data for the image
+GLubyte * textureData;
 
 #if defined(_WIN32)
 #include <sys/timeb.h>
@@ -509,37 +511,92 @@ motion(int x, int y)
 }
 
 //Load the bitmap from the file
-void loadBitmap(const char * fileName, int * width, int * height, int * size) {
-	FILE * file = fopen(fileName, "r");
-	if (file == NULL) {
-		printf("Invalid File. \n");
-		return;
+//
+//void loadBitmap(const char * fileName, int * width, int * height, int * size, unsigned char ** buffData) {
+//	FILE * file = fopen(fileName, "r");
+//	if (file == NULL) {
+//		printf("Invalid File. \n");
+//		return;
+//	}
+//	
+//	int picWidth = -1, picHeight = -1, totalSize = -1;
+//	fread(&picWidth, 1, sizeof(int), file);
+//	printf("bitmap_width is: %d\n", picWidth);
+//	fread(&picHeight, 1, sizeof(int), file);
+//	printf("bitmap_height is: %d\n", picHeight);
+//	fread(&totalSize, 1, sizeof(int), file);
+//	printf("bitmap_data_size is: %d\n", totalSize);
+//
+//	*width = picWidth;
+//	*height = picHeight;
+//	*size = totalSize;
+//
+//	fread(&size, 1, sizeof(short), file);
+//	fseek(file, size, SEEK_SET);
+//	/*unsigned char * data = (unsigned char*) malloc (size);
+//	for (int i = 0; i < size + 1; ++i) {
+//		data[i] = 0;
+//	}*/
+//	//bitmapData = new unsigned char[size];
+//	bitmapData = (unsigned char*)malloc(size);
+//	//for (int i = 0; i < size; ++i) {
+//	//	bitmapData[i] = '\0';
+//	fread(bitmapData, sizeof(unsigned char), size, file);
+//	*buffData = bitmapData;
+//	fclose(file);
+//}
+
+// Header info found at http://atlc.sourceforge.net/bmp.html
+void loadBitmap(const char* filename, int* width, int* height, int* size, unsigned char** pixel_data) {
+	FILE* fp = fopen(filename, "r");
+	if (fp == NULL) {
+		printf("Couldn't open file... aborting\n");
 	}
+	short identifier = -1;
+	fread(&identifier, 1, sizeof(short), fp); printf("Identifer is: %c\n", identifier);
+	int filesize = -1;
+	fread(&filesize, 1, sizeof(int), fp); printf("filesize is: %d\n", filesize);
+	int reserved = -1;
+	fread(&reserved, 1, sizeof(int), fp); printf("reserved is: %d\n", reserved);
+	int bitmap_offset = -1;
+	fread(&bitmap_offset, 1, sizeof(int), fp); printf("bitmap_offset is: %d\n", bitmap_offset);
+	int bitmap_header_size = -1;
+	fread(&bitmap_header_size, 1, sizeof(int), fp); printf("bitmap_header_size is: %d\n", bitmap_header_size);
+	int bitmap_width = -1;
+	fread(&bitmap_width, 1, sizeof(int), fp); printf("bitmap_width is: %d\n", bitmap_width);
+	int bitmap_height = -1;
+	fread(&bitmap_height, 1, sizeof(int), fp); printf("bitmap_height is: %d\n", bitmap_height);
+	short bitmap_planes = -1;
+	fread(&bitmap_planes, 1, sizeof(short), fp); printf("bitmap_planes is: %d\n", bitmap_planes);
+	short bits_per_pixel = -1;
+	fread(&bits_per_pixel, 1, sizeof(short), fp); printf("bits_per_pixel is: %d\n", bits_per_pixel);
+	int compression = -1;
+	fread(&compression, 1, sizeof(int), fp); printf("compression is: %d\n", compression);
+	int bitmap_data_size = -1;
+	fread(&bitmap_data_size, 1, sizeof(int), fp); printf("bitmap_data_size is: %d\n", bitmap_data_size);
+	int hresolution = -1;
+	fread(&hresolution, 1, sizeof(int), fp); printf("hresolution is: %d\n", hresolution);
+	int vresolution = -1;
+	fread(&vresolution, 1, sizeof(int), fp); printf("vresolution is: %d\n", vresolution);
+	int num_colors = -1;
+	fread(&num_colors, 1, sizeof(int), fp); printf("num_colors is: %d\n", num_colors);
+	int num_important_colors = -1;
+	fread(&num_important_colors, 1, sizeof(int), fp); printf("num_important_colors is: %d\n", num_important_colors);
 
-	int picWidth = -1, picHeight = -1, totalSize = -1;
-	fread(&picWidth, 1, sizeof(int), file);
-	printf("bitmap_width is: %d\n", picWidth);
-	fread(&picHeight, 1, sizeof(int), file);
-	printf("bitmap_height is: %d\n", picHeight);
-	fread(&totalSize, 1, sizeof(int), file);
-	printf("bitmap_data_size is: %d\n", totalSize);
+	// Jump to the data already!
+	fseek(fp, bitmap_offset, SEEK_SET);
 
-	*width = picWidth;
-	*height = picHeight;
-	*size = totalSize;
+	//unsigned char* data = new unsigned char[bitmap_data_size];
+	unsigned char* data = (char *) malloc (bitmap_data_size);
+	// Read data in BGR format
+	fread(data, sizeof(unsigned char), bitmap_data_size, fp);
 
-	fread(&size, 1, sizeof(short), file);
-	fseek(file, size, SEEK_SET);
-	/*unsigned char * data = (unsigned char*) malloc (size);
-	for (int i = 0; i < size + 1; ++i) {
-		data[i] = 0;
-	}*/
-	//bitmapData = new unsigned char[size];
-	bitmapData = (unsigned char*)malloc(size);
-	//for (int i = 0; i < size; ++i) {
-	//	bitmapData[i] = '\0';
-	fread(bitmapData, sizeof(unsigned char), size, file);
-	fclose(file);
+	// Make pixel_data point to the pixels
+	*pixel_data = data;
+	*size = bitmap_data_size;
+	*width = bitmap_width;
+	*height = bitmap_height;
+	fclose(fp);
 }
 
 //Load the contents from the shader files
@@ -702,14 +759,14 @@ main(int argc, char** argv)
 	
 	//Load the Bitmap
 	int width = -1, height = -1, size = -1;
-	loadBitmap("BrownDirt.bmp", &width, &height, &size); //Get the data for the bitmap
+	loadBitmap("BrownDirt.bmp", &width, &height, &size, (unsigned char**)&textureData); //Get the data for the bitmap
 	glEnable(GL_TEXTURE_2D); //Enable texture
 	GLuint bitmapID;
 	glGenTextures(1, &bitmapID); //Get ID for texture
 	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData);
 	
-	/*
+	
 	//Enable texture coordinates in the OpenGL window
 	GLuint textureCoordinateID = glGetAttribLocation(programShaderID, "openglCoor");
 	glEnableVertexAttribArray(textureCoordinateID);
@@ -722,10 +779,14 @@ main(int argc, char** argv)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+	//ABOVE HERE IT WORKS, dealloc shit
+
 	//Get and activate the texture
 	GLuint textureID = glGetUniformLocation(programShaderID, "texture");
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(textureID, 0);
+
+	/*
 
 	//TODO - Matrix//
 
