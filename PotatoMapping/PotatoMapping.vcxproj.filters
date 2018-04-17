@@ -33,6 +33,12 @@
     <None Include="..\Source Files\smooth.dsw">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="..\Source Files\fShader.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\Source Files\vShader.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source Files\glm.h">

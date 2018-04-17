@@ -5,7 +5,7 @@
     Model viewer program.  Exercises the glm library.
 */
 
-
+#include <GL/glew.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +19,8 @@
 #pragma comment( linker, "/entry:\"mainCRTStartup\"" )  // set the entry point to be main()
 
 #define DATA_DIR "data/"
+
+#define BUFFER_OFFSET(i) ((char *) NULL + (i))
 
 char*      model_file = NULL;		/* name of the obect file */
 GLuint     model_list = 0;		    /* display list for object */
@@ -36,6 +38,12 @@ GLdouble   pan_x = 0.0;
 GLdouble   pan_y = 0.0;
 GLdouble   pan_z = 0.0;
 
+//Size of the bitmap file
+int size = -1;
+//Store the data of the bitmap
+unsigned char * bitmapData;
+//Original Colof of each pixel of the bitmap filename
+GLubyte * bitmapColor;
 
 #if defined(_WIN32)
 #include <sys/timeb.h>
@@ -500,6 +508,33 @@ motion(int x, int y)
     glutPostRedisplay();
 }
 
+
+//Load the bitmap from the file
+void loadBitmap(const char * fileName) {
+	FILE * file = fopen(fileName, "r");
+	if (!file)
+		printf("Invalid File. \n");
+	fread(&size, 1, sizeof(short), file);
+	fseek(file, size, SEEK_SET);
+	unsigned char * data = (unsigned char*) malloc (size);
+	fread(data, sizeof(unsigned char), size, file);
+	fclose(file);
+}
+
+//Load the contents from the shader files
+char * loadContents(const char * fileName) {
+	FILE * file = fopen(fileName, "r");
+	fseek(file, 0, SEEK_END);
+	long length = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	char * final = (char *) malloc (length + 1);
+	//char * final[length + 1] = { 0 };
+	fread(final, 1, length, file);
+	final[length + 1] = '\0';
+	fclose(file);
+	return final;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -519,7 +554,7 @@ main(int argc, char** argv)
     }
     
     if (!model_file) {
-        model_file = "data/dolphins.obj";
+        model_file = "data/PotatoV3.obj";
     }
     
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | buffering);
@@ -570,6 +605,84 @@ main(int argc, char** argv)
     
     init();
     
+	//** Texture Mapping Implementation **//
+
+	//Create the vertex shader
+	GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
+	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShaderID, 1, (const GLchar **) & "vShader.vsh", NULL);
+	glCompileShader(vertexShaderID);
+
+	//Create the fragment shader
+	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderID, 1, (const GLchar **) & "fShader.fsh", NULL);
+	glCompileShader(fragmentShaderID);
+
+	//Create the shader for the program
+	programShaderID = glCreateProgram();
+	glAttachShader(programShaderID, vertexShaderID);
+	glAttachShader(programShaderID, fragmentShaderID);
+	glLinkProgram(programShaderID);
+
+	//Create and bind vertex buffers
+	GLuint vertexArray, vertexBuffer;
+	glGenVertexArrays(1, &vertexArray);
+	glBindVertexArray(vertexArray);
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+
+	//Create the buffer for the texture
+	glBufferData(GL_ARRAY_BUFFER, 8 * model->numvertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->normals);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->texcoords);
+
+	//Get the IDs of the variables in the shader
+	GLuint position, normal, light;
+	position = glGetAttribLocation(programShaderID, "localVertex");
+	normal = glGetAttribLocation(programShaderID, "localVertexNormal");
+	light = glGetUniformLocation(programShaderID, "lightVector");
+
+	//Load the Bitmap
+	loadBitmap("BrownDirt.bmp"); //Get the data for the bitmap
+	glEnable(GL_TEXTURE_2D); //Enable texture
+	GLuint bitmapID;
+	glGenTextures(1, &bitmapID); //Get ID for texture
+	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapData);
+
+	//Enable texture coordinates in the OpenGL window
+	GLuint textureCoordinateID = glGetAttribLocation(programShaderID, "openglCoor");
+	glEnableVertexAttribArray(textureCoordinateID);
+	int offset = 6 * model->numvertices * sizeof(GLfloat);
+	glVertexAttribPointer(textureCoordinateID, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset));
+
+	//Enable the kind of texture repetition and filtering
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	//Get and activate the texture
+	GLuint textureID = glGetUniformLocation(programShaderID, "texture");
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(textureID, 0);
+
+	//TODO - Matrix//
+
+	glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(model->numvertices)));
+	glUseProgram(programShaderID);
+	glEnableVertexAttribArray(position);
+	glEnableVertexAttribArray(normal);
+
+	//Depth culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glEnable(GL_DEPTH_TEST);
+
+	//** **//
+
     glutMainLoop();
     return 0;
 }

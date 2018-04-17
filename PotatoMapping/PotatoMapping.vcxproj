@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Renzo\Desktop\PotatoMapping\freeglut\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Renzo\Desktop\PotatoMapping\freeglut\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Samantha Garcia\Desktop\PotatoMapping\glew\include;C:\Users\Samantha Garcia\Desktop\PotatoMapping\freeglut\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Samantha Garcia\Desktop\PotatoMapping\glew\lib\Release\Win32;C:\Users\Samantha Garcia\Desktop\PotatoMapping\freeglut\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -82,7 +82,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>OpenGL32.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenGL32.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -123,12 +123,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\Source Files\fShader.frag" />
     <None Include="..\Source Files\glm.dsp" />
     <None Include="..\Source Files\glut32.dll" />
     <None Include="..\Source Files\Makefile.sgi" />
     <None Include="..\Source Files\Makefile.win" />
     <None Include="..\Source Files\smooth.dsp" />
     <None Include="..\Source Files\smooth.dsw" />
+    <None Include="..\Source Files\vShader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source Files\dirent32.h" />
