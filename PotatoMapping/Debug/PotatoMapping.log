@@ -7,6 +7,6 @@ c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(209): warni
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(347): warning C4305: 'function': truncation from 'double' to 'GLfloat'
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(363): warning C4305: '+=': truncation from 'double' to 'GLfloat'
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(386): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(696): warning C4101: 'fragmentShader': unreferenced local variable
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(696): warning C4101: 'vertexShader': unreferenced local variable
-LINK : fatal error LNK1168: cannot open C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe for writing
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(672): warning C4101: 'fragmentShader': unreferenced local variable
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(672): warning C4101: 'vertexShader': unreferenced local variable
+  PotatoMapping.vcxproj -> C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe

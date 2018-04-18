@@ -548,48 +548,62 @@ motion(int x, int y)
 
 // Header info found at http://atlc.sourceforge.net/bmp.html
 void loadBitmap(const char* filename, int* width, int* height, int* size, unsigned char** pixel_data) {
-	FILE* fp = fopen(filename, "r");
-	if (fp == NULL) {
+	FILE* file = fopen(filename, "r");
+	if (file == NULL) {
 		printf("Couldn't open file... aborting\n");
 	}
 	short identifier = -1;
-	fread(&identifier, 1, sizeof(short), fp); printf("Identifer is: %c\n", identifier);
+	fread(&identifier, 1, sizeof(short), file);
+	printf("Identifer is: %c\n", identifier);
 	int filesize = -1;
-	fread(&filesize, 1, sizeof(int), fp); printf("filesize is: %d\n", filesize);
+	fread(&filesize, 1, sizeof(int), file);
+	printf("filesize is: %d\n", filesize);
 	int reserved = -1;
-	fread(&reserved, 1, sizeof(int), fp); printf("reserved is: %d\n", reserved);
+	fread(&reserved, 1, sizeof(int), file);
+	printf("reserved is: %d\n", reserved);
 	int bitmap_offset = -1;
-	fread(&bitmap_offset, 1, sizeof(int), fp); printf("bitmap_offset is: %d\n", bitmap_offset);
+	fread(&bitmap_offset, 1, sizeof(int), file);
+	printf("bitmap_offset is: %d\n", bitmap_offset);
 	int bitmap_header_size = -1;
-	fread(&bitmap_header_size, 1, sizeof(int), fp); printf("bitmap_header_size is: %d\n", bitmap_header_size);
+	fread(&bitmap_header_size, 1, sizeof(int), file);
+	printf("bitmap_header_size is: %d\n", bitmap_header_size);
 	int bitmap_width = -1;
-	fread(&bitmap_width, 1, sizeof(int), fp); printf("bitmap_width is: %d\n", bitmap_width);
+	fread(&bitmap_width, 1, sizeof(int), file);
+	printf("bitmap_width is: %d\n", bitmap_width);
 	int bitmap_height = -1;
-	fread(&bitmap_height, 1, sizeof(int), fp); printf("bitmap_height is: %d\n", bitmap_height);
+	fread(&bitmap_height, 1, sizeof(int), file);
+	printf("bitmap_height is: %d\n", bitmap_height);
 	short bitmap_planes = -1;
-	fread(&bitmap_planes, 1, sizeof(short), fp); printf("bitmap_planes is: %d\n", bitmap_planes);
+	fread(&bitmap_planes, 1, sizeof(short), file);
+	printf("bitmap_planes is: %d\n", bitmap_planes);
 	short bits_per_pixel = -1;
-	fread(&bits_per_pixel, 1, sizeof(short), fp); printf("bits_per_pixel is: %d\n", bits_per_pixel);
+	fread(&bits_per_pixel, 1, sizeof(short), file);
+	printf("bits_per_pixel is: %d\n", bits_per_pixel);
 	int compression = -1;
-	fread(&compression, 1, sizeof(int), fp); printf("compression is: %d\n", compression);
+	fread(&compression, 1, sizeof(int), file);
+	printf("compression is: %d\n", compression);
 	int bitmap_data_size = -1;
-	fread(&bitmap_data_size, 1, sizeof(int), fp); printf("bitmap_data_size is: %d\n", bitmap_data_size);
+	fread(&bitmap_data_size, 1, sizeof(int), file);
+	printf("bitmap_data_size is: %d\n", bitmap_data_size);
 	int hresolution = -1;
-	fread(&hresolution, 1, sizeof(int), fp); printf("hresolution is: %d\n", hresolution);
+	fread(&hresolution, 1, sizeof(int), file);
+	printf("hresolution is: %d\n", hresolution);
 	int vresolution = -1;
-	fread(&vresolution, 1, sizeof(int), fp); printf("vresolution is: %d\n", vresolution);
+	fread(&vresolution, 1, sizeof(int), file);
+	printf("vresolution is: %d\n", vresolution);
 	int num_colors = -1;
-	fread(&num_colors, 1, sizeof(int), fp); printf("num_colors is: %d\n", num_colors);
+	fread(&num_colors, 1, sizeof(int), file);
+	printf("num_colors is: %d\n", num_colors);
 	int num_important_colors = -1;
-	fread(&num_important_colors, 1, sizeof(int), fp); printf("num_important_colors is: %d\n", num_important_colors);
+	fread(&num_important_colors, 1, sizeof(int), file); printf("num_important_colors is: %d\n", num_important_colors);
 
 	// Jump to the data already!
-	fseek(fp, bitmap_offset, SEEK_SET);
+	fseek(file, bitmap_offset, SEEK_SET);
 
 	//unsigned char* data = new unsigned char[bitmap_data_size];
 	unsigned char* data = (char *) malloc (bitmap_data_size);
 	// Read data in BGR format
-	fread(data, sizeof(unsigned char), bitmap_data_size, fp);
+	fread(data, sizeof(unsigned char), bitmap_data_size, file);
 
 	// Make pixel_data point to the pixels
 	*pixel_data = data;
@@ -747,9 +761,9 @@ main(int argc, char** argv)
 	//Create the buffer for the texture
 	glBufferData(GL_ARRAY_BUFFER, 8 * model->numvertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->normals);
+	glBufferSubData(GL_ARRAY_BUFFER, 3 * model->numvertices * sizeof(GLfloat), 3 * model->numvertices * sizeof(GLfloat), model->normals);
 	//TODO - Acess Violation Reading Location
-	//glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->texcoords);
+	glBufferSubData(GL_ARRAY_BUFFER, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->normals);
 	
 	//Get the IDs of the variables in the shader
 	GLuint position, normal, light;
@@ -786,8 +800,6 @@ main(int argc, char** argv)
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(textureID, 0);
 
-	/*
-
 	//TODO - Matrix//
 
 	glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -800,8 +812,6 @@ main(int argc, char** argv)
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
-
-	*/
 
 	//** **//
 
