@@ -15,6 +15,7 @@
 #include "gltb.h"
 #include "glm.h"
 #include "dirent32.h"
+//#include "MathHelper.h"
 
 #pragma comment( linker, "/entry:\"mainCRTStartup\"" )  // set the entry point to be main()
 
@@ -46,6 +47,40 @@ unsigned char * bitmapData;
 GLubyte * bitmapColor;
 //Data for the image
 GLubyte * textureData;
+
+GLfloat* M;				// The final model matrix M to change into world coordinates
+
+GLfloat* V;				// The camera matrix (for position/rotation) to change into camera coordinates
+GLfloat* P;				// The perspective matrix for the camera (to give the scene depth); initialize this ONLY ONCE!
+
+
+/*NEW*/
+
+GLuint	perspectiveMatrixID, viewMatrixID, modelMatrixID;	// IDs of variables mP, mV and mM in the shader
+GLuint	allRotsMatrixID;
+GLuint	lightID;
+
+GLfloat* rotXMatrix;	// Matrix for rotations about the X axis
+GLfloat* rotYMatrix;	// Matrix for rotations about the Y axis
+GLfloat* rotZMatrix;	// Matrix for rotations about the Z axis
+
+GLfloat* allRotsMatrix;	// Matrix for all the rotations (X, Y Z) combined
+
+GLfloat* transMatrix;	// Matrix for changing the position of the object
+GLfloat* scaleMatrix;	// Duh..
+GLfloat* tempMatrix1;	// A temporary matrix for holding intermediate multiplications
+GLfloat* M;				// The final model matrix M to change into world coordinates
+
+GLfloat* V;				// The camera matrix (for position/rotation) to change into camera coordinates
+GLfloat* P;				// The perspective matrix for the camera (to give the scene depth); initialize this ONLY ONCE!
+
+GLfloat  theta;			// An amount of rotation along one axis
+GLfloat	 scaleAmount;	// In case the object is too big or small
+
+GLfloat camX, camY, camZ;	// A first (purposely bad) attempt at camera movement
+GLfloat yaw, pitch, roll;	// Store this in a matrix instead!
+
+GLfloat light[] = { 0.0f, 1.0f, 1.0f, 1.0f };
 
 #if defined(_WIN32)
 #include <sys/timeb.h>
@@ -231,6 +266,13 @@ display(void)
     glCallList(model_list);
 #endif
     
+	// Important! Pass that data to the shader variables
+	glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, M);
+	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, V);
+	glUniformMatrix4fv(perspectiveMatrixID, 1, GL_TRUE, P);
+	glUniformMatrix4fv(allRotsMatrixID, 1, GL_TRUE, allRotsMatrix);
+	glUniform4fv(lightID, 1, light);
+	
     glDisable(GL_LIGHTING);
     if (bounding_box) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -254,7 +296,6 @@ display(void)
             model->nummaterials);
         shadowtext(5, height-(5+18*1), s);
     }
-    
     /* spit out frame rate. */
     frames++;
     if (frames > NUM_FRAMES) {
@@ -610,7 +651,7 @@ void loadBitmap(const char* filename, int* width, int* height, int* size, unsign
 	*size = bitmap_data_size;
 	*width = bitmap_width;
 	*height = bitmap_height;
-	fclose(fp);
+	fclose(file);
 }
 
 //Load the contents from the shader files
@@ -633,6 +674,27 @@ char * loadContents(const char * fileName) {
 	return final;
 }
 
+// Makes an identity matrix
+void makeIdentity(GLfloat* result)
+{
+	for (int i = 0; i < 16; i++) {
+		result[i] = 0.0f;
+	}
+	result[0] = result[5] = result[10] = result[15] = 1.0f;
+}
+
+
+void makePerspectiveMatrix(GLfloat* result, GLfloat fov, GLfloat aspect, GLfloat nearPlane, GLfloat farPlane) {
+	GLfloat f = 1.0f / tan(fov*3.1415926f / 360.0f);
+	makeIdentity(result);
+	result[0] = f / aspect;
+	result[5] = f;
+	result[10] = ((farPlane + nearPlane) / (nearPlane - farPlane));
+	result[11] = -1;
+	result[14] = (2.0f*farPlane*nearPlane) / (nearPlane - farPlane);
+	result[15] = 0;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -640,6 +702,16 @@ main(int argc, char** argv)
     struct dirent* direntp;
     DIR* dirp;
     int models;
+
+	M = (GLfloat *)malloc(16 * sizeof (GLfloat));
+	V = (GLfloat *)malloc(16 * sizeof (GLfloat));
+	P = (GLfloat *)malloc(16 * sizeof (GLfloat));
+	makeIdentity(M);		
+	makeIdentity(V);		
+	makeIdentity(P);
+	
+	// Set up the (P)erspective matrix only once! Arguments are 1) the resulting matrix, 2) FoV, 3) aspect ratio, 4) near plane 5) far plane
+	makePerspectiveMatrix(P, 60.0f, 1.0f, 1.0f, 1000.0f);
     
     glutInitWindowSize(512, 512);
     glutInit(&argc, argv);
@@ -652,7 +724,7 @@ main(int argc, char** argv)
     }
     
     if (!model_file) {
-        model_file = "data/PotatoV3.obj";
+        model_file = "data/cube2.obj";
     }
     
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | buffering);
@@ -705,11 +777,11 @@ main(int argc, char** argv)
     
 	//** Texture Mapping Implementation **//
 
-	//Create the vertex shader
+	//Initialize GLEW
 	glewInit();
 	GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
+	//Create the vertex shader
 	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	//TODO, Make sure reading correctly, Double Check
 	const char * vertexSource = loadContents("vShader.vert");
 	glShaderSource(vertexShaderID, 1, (const GLchar **)&vertexSource, NULL);
 	glCompileShader(vertexShaderID);
@@ -793,7 +865,7 @@ main(int argc, char** argv)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	//ABOVE HERE IT WORKS, dealloc shit
+	//ABOVE HERE IT WORKS, dealloc
 
 	//Get and activate the texture
 	GLuint textureID = glGetUniformLocation(programShaderID, "texture");
@@ -801,9 +873,15 @@ main(int argc, char** argv)
 	glUniform1i(textureID, 0);
 
 	//TODO - Matrix//
-
+	// ============ glUniformLocation is how you pull IDs for uniform variables===============
+	perspectiveMatrixID = glGetUniformLocation(programShaderID, "depthMatrix");
+	viewMatrixID = glGetUniformLocation(programShaderID, "cameraMatrix");
+	modelMatrixID = glGetUniformLocation(programShaderID, "modelMatrix");
+	allRotsMatrixID = glGetUniformLocation(programShaderID, "rotationMatrix");
+	
 	glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(model->numvertices)));
+
 	glUseProgram(programShaderID);
 	glEnableVertexAttribArray(position);
 	glEnableVertexAttribArray(normal);
