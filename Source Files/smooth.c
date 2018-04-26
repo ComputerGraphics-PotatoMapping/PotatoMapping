@@ -15,6 +15,7 @@
 #include "gltb.h"
 #include "glm.h"
 #include "dirent32.h"
+
 //#include "MathHelper.h"
 
 #pragma comment( linker, "/entry:\"mainCRTStartup\"" )  // set the entry point to be main()
@@ -39,48 +40,11 @@ GLdouble   pan_x = 0.0;
 GLdouble   pan_y = 0.0;
 GLdouble   pan_z = 0.0;
 
-//Size of the bitmap file
-int size = -1;
-//Store the data of the bitmap
-unsigned char * bitmapData;
-//Original Colof of each pixel of the bitmap filename
-GLubyte * bitmapColor;
-//Data for the image
-GLubyte * textureData;
-
-GLfloat* M;				// The final model matrix M to change into world coordinates
-
-GLfloat* V;				// The camera matrix (for position/rotation) to change into camera coordinates
-GLfloat* P;				// The perspective matrix for the camera (to give the scene depth); initialize this ONLY ONCE!
-
-
-/*NEW*/
-
-GLuint	perspectiveMatrixID, viewMatrixID, modelMatrixID;	// IDs of variables mP, mV and mM in the shader
-GLuint	allRotsMatrixID;
-GLuint	lightID;
-
-GLfloat* rotXMatrix;	// Matrix for rotations about the X axis
-GLfloat* rotYMatrix;	// Matrix for rotations about the Y axis
-GLfloat* rotZMatrix;	// Matrix for rotations about the Z axis
-
-GLfloat* allRotsMatrix;	// Matrix for all the rotations (X, Y Z) combined
-
-GLfloat* transMatrix;	// Matrix for changing the position of the object
-GLfloat* scaleMatrix;	// Duh..
-GLfloat* tempMatrix1;	// A temporary matrix for holding intermediate multiplications
-GLfloat* M;				// The final model matrix M to change into world coordinates
-
-GLfloat* V;				// The camera matrix (for position/rotation) to change into camera coordinates
-GLfloat* P;				// The perspective matrix for the camera (to give the scene depth); initialize this ONLY ONCE!
-
-GLfloat  theta;			// An amount of rotation along one axis
-GLfloat	 scaleAmount;	// In case the object is too big or small
-
-GLfloat camX, camY, camZ;	// A first (purposely bad) attempt at camera movement
-GLfloat yaw, pitch, roll;	// Store this in a matrix instead!
-
-GLfloat light[] = { 0.0f, 1.0f, 1.0f, 1.0f };
+unsigned char bitmapHeader[54];
+unsigned int dataPosition;
+unsigned int width, height;
+unsigned int imageSize;
+unsigned char * data;
 
 #if defined(_WIN32)
 #include <sys/timeb.h>
@@ -185,6 +149,41 @@ lists(void)
         else
             model_list = glmList(model, GLM_SMOOTH | GLM_MATERIAL);
     }
+}
+
+void loadTexture(const char* filename) {
+	FILE* file = fopen(filename, "r");
+	if (file == NULL) {
+		printf("File could not be opened\n");
+		return;
+	}
+
+	unsigned char header[54];
+	//Check if BMP file
+	if (fread(header, 1, 54, file) != 54) { // If not 54 bytes read : problem
+		printf("Not a correct BMP file\n");
+		return;
+	}
+
+	// Read ints from the byte array
+	dataPosition = *(int*)&(header[0x0A]);
+	imageSize = *(int*)&(header[0x22]);
+	width = *(int*)&(header[0x12]);
+	height = *(int*)&(header[0x16]);
+
+	printf("Width: %d \n Height: %d \n Size: %d", width, height, imageSize);
+
+	//If BMP File is not formatted correctly, format it
+	if (imageSize == 0)
+		imageSize = width * height * 3;
+	if (dataPosition == 0)
+		dataPosition = 54;
+
+	unsigned char* data = (char *)malloc(imageSize * sizeof(unsigned char));
+	//Read the data
+	fread(data, sizeof(unsigned char), imageSize, file);
+	//Close the file
+	fclose(file);
 }
 
 void
@@ -551,150 +550,6 @@ motion(int x, int y)
     glutPostRedisplay();
 }
 
-//Load the bitmap from the file
-//
-//void loadBitmap(const char * fileName, int * width, int * height, int * size, unsigned char ** buffData) {
-//	FILE * file = fopen(fileName, "r");
-//	if (file == NULL) {
-//		printf("Invalid File. \n");
-//		return;
-//	}
-//	
-//	int picWidth = -1, picHeight = -1, totalSize = -1;
-//	fread(&picWidth, 1, sizeof(int), file);
-//	printf("bitmap_width is: %d\n", picWidth);
-//	fread(&picHeight, 1, sizeof(int), file);
-//	printf("bitmap_height is: %d\n", picHeight);
-//	fread(&totalSize, 1, sizeof(int), file);
-//	printf("bitmap_data_size is: %d\n", totalSize);
-//
-//	*width = picWidth;
-//	*height = picHeight;
-//	*size = totalSize;
-//
-//	fread(&size, 1, sizeof(short), file);
-//	fseek(file, size, SEEK_SET);
-//	/*unsigned char * data = (unsigned char*) malloc (size);
-//	for (int i = 0; i < size + 1; ++i) {
-//		data[i] = 0;
-//	}*/
-//	//bitmapData = new unsigned char[size];
-//	bitmapData = (unsigned char*)malloc(size);
-//	//for (int i = 0; i < size; ++i) {
-//	//	bitmapData[i] = '\0';
-//	fread(bitmapData, sizeof(unsigned char), size, file);
-//	*buffData = bitmapData;
-//	fclose(file);
-//}
-
-// Header info found at http://atlc.sourceforge.net/bmp.html
-void loadBitmap(const char* filename, int* width, int* height, int* size, unsigned char** pixel_data) {
-	FILE* file = fopen(filename, "r");
-	if (file == NULL) {
-		printf("Couldn't open file... aborting\n");
-	}
-	short identifier = -1;
-	fread(&identifier, 1, sizeof(short), file);
-	printf("Identifer is: %c\n", identifier);
-	int filesize = -1;
-	fread(&filesize, 1, sizeof(int), file);
-	printf("filesize is: %d\n", filesize);
-	int reserved = -1;
-	fread(&reserved, 1, sizeof(int), file);
-	printf("reserved is: %d\n", reserved);
-	int bitmap_offset = -1;
-	fread(&bitmap_offset, 1, sizeof(int), file);
-	printf("bitmap_offset is: %d\n", bitmap_offset);
-	int bitmap_header_size = -1;
-	fread(&bitmap_header_size, 1, sizeof(int), file);
-	printf("bitmap_header_size is: %d\n", bitmap_header_size);
-	int bitmap_width = -1;
-	fread(&bitmap_width, 1, sizeof(int), file);
-	printf("bitmap_width is: %d\n", bitmap_width);
-	int bitmap_height = -1;
-	fread(&bitmap_height, 1, sizeof(int), file);
-	printf("bitmap_height is: %d\n", bitmap_height);
-	short bitmap_planes = -1;
-	fread(&bitmap_planes, 1, sizeof(short), file);
-	printf("bitmap_planes is: %d\n", bitmap_planes);
-	short bits_per_pixel = -1;
-	fread(&bits_per_pixel, 1, sizeof(short), file);
-	printf("bits_per_pixel is: %d\n", bits_per_pixel);
-	int compression = -1;
-	fread(&compression, 1, sizeof(int), file);
-	printf("compression is: %d\n", compression);
-	int bitmap_data_size = -1;
-	fread(&bitmap_data_size, 1, sizeof(int), file);
-	printf("bitmap_data_size is: %d\n", bitmap_data_size);
-	int hresolution = -1;
-	fread(&hresolution, 1, sizeof(int), file);
-	printf("hresolution is: %d\n", hresolution);
-	int vresolution = -1;
-	fread(&vresolution, 1, sizeof(int), file);
-	printf("vresolution is: %d\n", vresolution);
-	int num_colors = -1;
-	fread(&num_colors, 1, sizeof(int), file);
-	printf("num_colors is: %d\n", num_colors);
-	int num_important_colors = -1;
-	fread(&num_important_colors, 1, sizeof(int), file); printf("num_important_colors is: %d\n", num_important_colors);
-
-	// Jump to the data already!
-	fseek(file, bitmap_offset, SEEK_SET);
-
-	//unsigned char* data = new unsigned char[bitmap_data_size];
-	unsigned char* data = (char *) malloc (bitmap_data_size);
-	// Read data in BGR format
-	fread(data, sizeof(unsigned char), bitmap_data_size, file);
-
-	// Make pixel_data point to the pixels
-	*pixel_data = data;
-	*size = bitmap_data_size;
-	*width = bitmap_width;
-	*height = bitmap_height;
-	fclose(file);
-}
-
-//Load the contents from the shader files
-char * loadContents(const char * fileName) {
-	FILE * file = fopen(fileName, "r");
-	if (file == NULL) {
-		printf("File Could Not Be Found\n");
-		return NULL;
-	}
-	fseek(file, 0, SEEK_END);
-	long length = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	char * final = (char *) malloc (length + 1);
-	for (int i = 0; i < length + 1; ++i) {
-		final[i] = 0;
-	}
-	fread(final, 1, length, file);
-	final[length + 1] = '\0';
-	fclose(file);
-	return final;
-}
-
-// Makes an identity matrix
-void makeIdentity(GLfloat* result)
-{
-	for (int i = 0; i < 16; i++) {
-		result[i] = 0.0f;
-	}
-	result[0] = result[5] = result[10] = result[15] = 1.0f;
-}
-
-
-void makePerspectiveMatrix(GLfloat* result, GLfloat fov, GLfloat aspect, GLfloat nearPlane, GLfloat farPlane) {
-	GLfloat f = 1.0f / tan(fov*3.1415926f / 360.0f);
-	makeIdentity(result);
-	result[0] = f / aspect;
-	result[5] = f;
-	result[10] = ((farPlane + nearPlane) / (nearPlane - farPlane));
-	result[11] = -1;
-	result[14] = (2.0f*farPlane*nearPlane) / (nearPlane - farPlane);
-	result[15] = 0;
-}
-
 int
 main(int argc, char** argv)
 {
@@ -703,16 +558,6 @@ main(int argc, char** argv)
     DIR* dirp;
     int models;
 
-	M = (GLfloat *)malloc(16 * sizeof (GLfloat));
-	V = (GLfloat *)malloc(16 * sizeof (GLfloat));
-	P = (GLfloat *)malloc(16 * sizeof (GLfloat));
-	makeIdentity(M);		
-	makeIdentity(V);		
-	makeIdentity(P);
-	
-	// Set up the (P)erspective matrix only once! Arguments are 1) the resulting matrix, 2) FoV, 3) aspect ratio, 4) near plane 5) far plane
-	makePerspectiveMatrix(P, 60.0f, 1.0f, 1.0f, 1000.0f);
-    
     glutInitWindowSize(512, 512);
     glutInit(&argc, argv);
     
@@ -776,143 +621,27 @@ main(int argc, char** argv)
     init();
     
 	//** Texture Mapping Implementation **//
-
+	/*
 	//Initialize GLEW
 	glewInit();
 
-
-
-
 	//Load the Bitmap
-	int width = -1, height = -1, size = -1;
-	loadBitmap("BrownDirt.bmp", &width, &height, &size, (unsigned char**)&textureData); //Get the data for the bitmap
-	glEnable(GL_TEXTURE_2D); //Enable texture
-	GLuint bitmapID;
-	glGenTextures(1, &bitmapID); //Get ID for texture
-	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData);
+	loadTexture("StoneLowerQuality.bmp");
+	//Enable the texture
+	glEnable(GL_TEXTURE_2D); 
+	//Declare ID
+	GLuint texID;
+	//Get ID for the Texture
+	glGenTextures(1, &texID);
+	//Bind the texture with its ID
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 
+	//Set the parameters for the texture
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	
-
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	/*GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
-	//Create the vertex shader
-	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	const char * vertexSource = loadContents("vShader.vert");
-	glShaderSource(vertexShaderID, 1, (const GLchar **)&vertexSource, NULL);
-	glCompileShader(vertexShaderID);
-
-	//Create the fragment shader
-	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	const char * fragmentSource = loadContents("fShader.frag");
-	glShaderSource(fragmentShaderID, 1, (const GLchar **)&fragmentSource, NULL);
-	glCompileShader(fragmentShaderID);*/
-
-	/*
-	printf("%d\t%d\n" ,vertexSource, fragmentShaderID);
-
-	GLint compiled = 0, compiled_2 = 0;
-	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &compiled);
-	if (!compiled)
-		printf("Frag Shader Not Working, %d\n", compiled);
-	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &compiled_2);
-	if (!compiled_2)
-		printf("Vertex Shader Not Working, %d\n", compiled_2);
-
-	GLint logLength;
-	glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &logLength);
-	char* msgBuffer = (char * ) malloc (logLength);
-	glGetShaderInfoLog(fragmentShaderID, logLength, NULL, msgBuffer);
-	printf("%s\n", msgBuffer);
-	//free (msgBuffer);
-
-	glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &logLength);
-	char* msgBuffer_2 = (char *)malloc(logLength);
-	glGetShaderInfoLog(vertexShaderID, logLength, NULL, msgBuffer_2);
-	printf("%s\n", msgBuffer_2);
-	//free (msgBuffer_2);
-	*/
-
-	//Create the shader for the program
-	/*programShaderID = glCreateProgram();
-	glAttachShader(programShaderID, vertexShaderID);
-	glAttachShader(programShaderID, fragmentShaderID);
-	glLinkProgram(programShaderID);
-
-	//Create and bind vertex buffers
-	GLuint vertexArray, vertexBuffer;
-	glGenVertexArrays(1, &vertexArray);
-	glBindVertexArray(vertexArray);
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	
-	//Create the buffer for the texture
-	glBufferData(GL_ARRAY_BUFFER, 8 * model->numvertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, 3 * model->numvertices * sizeof(GLfloat), 3 * model->numvertices * sizeof(GLfloat), model->normals);
-	//TODO - Acess Violation Reading Location
-	glBufferSubData(GL_ARRAY_BUFFER, 6 * model->numvertices * sizeof(GLfloat), 2 * model->numvertices * sizeof(GLfloat), model->normals);
-	
-	//Get the IDs of the variables in the shader
-	GLuint position, normal, light;
-	position = glGetAttribLocation(programShaderID, "localVertex");
-	normal = glGetAttribLocation(programShaderID, "localVertexNormal");
-	light = glGetUniformLocation(programShaderID, "lightVector");
-	
-	//Load the Bitmap
-	int width = -1, height = -1, size = -1;
-	loadBitmap("BrownDirt.bmp", &width, &height, &size, (unsigned char**)&textureData); //Get the data for the bitmap
-	glEnable(GL_TEXTURE_2D); //Enable texture
-	GLuint bitmapID;
-	glGenTextures(1, &bitmapID); //Get ID for texture
-	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData);
-	
-	
-	//Enable texture coordinates in the OpenGL window
-	GLuint textureCoordinateID = glGetAttribLocation(programShaderID, "openglCoor");
-	glEnableVertexAttribArray(textureCoordinateID);
-	int offset = 6 * model->numvertices * sizeof(GLfloat);
-	glVertexAttribPointer(textureCoordinateID, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset));
-
-	//Enable the kind of texture repetition and filtering
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-	//ABOVE HERE IT WORKS, dealloc
-
-	//Get and activate the texture
-	GLuint textureID = glGetUniformLocation(programShaderID, "texture");
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(textureID, 0);
-
-	//TODO - Matrix//
-	// ============ glUniformLocation is how you pull IDs for uniform variables===============
-	perspectiveMatrixID = glGetUniformLocation(programShaderID, "depthMatrix");
-	viewMatrixID = glGetUniformLocation(programShaderID, "cameraMatrix");
-	modelMatrixID = glGetUniformLocation(programShaderID, "modelMatrix");
-	allRotsMatrixID = glGetUniformLocation(programShaderID, "rotationMatrix");
-	
-	glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(model->numvertices)));
-
-	glUseProgram(programShaderID);
-	glEnableVertexAttribArray(position);
-	glEnableVertexAttribArray(normal);
-
-	//Depth culling
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glEnable(GL_DEPTH_TEST);*/
-
-	//** **//
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	*/
 
     glutMainLoop();
     return 0;

@@ -1,14 +1,15 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-layout (location = 2) in vec2 aTexCoord;
 
-out vec3 ourColor;
-out vec2 TexCoord;
+//Input vertex data
+layout (location = 0) in vec3 vertexPositionModel;
+layout (location = 1) in vec2 inUV;
 
-void main()
-{
-    gl_Position = vec4(aPos, 1.0);
-    ourColor = aColor;
-    TexCoord = aTexCoord;
+//Output, get the UV coordinate
+out vecUV;
+
+uniform mat4 MVP;
+
+void main () {
+	gl_Position = MVP * vec4 (vertexPositionModel, 1);
+	vecUV = inUV;
 }

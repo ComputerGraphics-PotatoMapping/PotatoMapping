@@ -50,9 +50,6 @@
     <ClInclude Include="..\Source Files\dirent32.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source Files\MathHelper.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Source Files\gltb.c">

@@ -136,7 +136,6 @@
     <ClInclude Include="..\Source Files\dirent32.h" />
     <ClInclude Include="..\Source Files\glm.h" />
     <ClInclude Include="..\Source Files\gltb.h" />
-    <ClInclude Include="..\Source Files\MathHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Source Files\glm.c" />
