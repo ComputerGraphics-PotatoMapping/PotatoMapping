@@ -1,10 +1,10 @@
 ﻿  smooth.c
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(32): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(67): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(122): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(123): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(274): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(418): warning C4305: 'function': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(434): warning C4305: '+=': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(457): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(116): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(171): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(172): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(343): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(487): warning C4305: 'function': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(503): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(526): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
   PotatoMapping.vcxproj -> C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe

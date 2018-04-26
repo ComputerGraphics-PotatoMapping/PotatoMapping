@@ -40,11 +40,60 @@ GLdouble   pan_x = 0.0;
 GLdouble   pan_y = 0.0;
 GLdouble   pan_z = 0.0;
 
+GLboolean ourModel = GL_TRUE;
+
 unsigned char bitmapHeader[54];
 unsigned int dataPosition;
 unsigned int width, height;
 unsigned int imageSize;
 unsigned char * data;
+
+//Struct for each vertex
+struct vertex {
+	GLfloat x, y, z;
+	GLfloat nx, ny, nz;
+	GLfloat tx, ty, tz;
+	//Tangent Vector
+	GLfloat tanvecx, tanvecy, tanvecz;
+	//Bitangent Vector
+	GLfloat bivecx, bivecy, bivecz;
+	//Normal Vector
+	GLfloat normvecx, normvecy, normvecz;
+};
+
+//Compute the Tangent Matrix
+void tangentMatrix(struct vertex one, const struct vertex two, const struct vertex three) {
+	GLfloat one_x, one_y, one_z, two_x, two_y, two_z, one_u_x, one_u_y, two_u_x, two_u_y;
+	//Get the edges
+	one_x = two.x - one.x;
+	one_y = two.y - one.y;
+	one_z = two.z - one.z;
+
+	two_x = three.x - one.x;
+	two_y = three.y - one.y;
+	two_z = three.z - one.z;
+
+	//Get the difference in tangents
+	one_u_x = two.tx - one.tx;
+	one_u_y = two.ty - one.ty;
+
+	two_u_x = three.tx - one.tx;
+	two_u_y = three.ty - one.ty;
+
+	GLfloat determiner = one_u_x * two_u_y - two_u_x * one_u_y;
+	//Tangent Vector
+	one.tanvecx = (one_x * two_u_y - two_x * one_u_y) / determiner;
+	one.tanvecy = (one_y * two_u_y - two_y * one_u_y) / determiner;
+	one.tanvecz = (one_z * two_u_y - two_z * one_u_y) / determiner;
+	//Bitangent Vector
+	one.bivecx = (-1 * one_x * two_u_x - two_x * one_u_x) / determiner;
+	one.bivecy = (-1 * one_y * two_u_x - two_y * one_u_x) / determiner;
+	one.bivecz = (-1 * one_z * two_u_x - two_z * one_u_x) / determiner;
+	//Normal Vector
+	one.normvecx = one.bivecy * one.tanvecz - one.bivecz * one.tanvecy;
+	one.normvecy = one.bivecz * one.tanvecx - one.bivecx * one.tanvecz;
+	one.normvecz = one.bivecx * one.tanvecy - one.bivecy * one.tanvecx;
+}
 
 #if defined(_WIN32)
 #include <sys/timeb.h>
@@ -189,6 +238,26 @@ void loadTexture(const char* filename) {
 	fread(data, sizeof(unsigned char), imageSize, file);
 	//Close the file
 	fclose(file);
+}
+
+//Load the contents from the shader files
+char * loadShaders (const char * fileName) {
+	FILE * file = fopen(fileName, "r");
+	if (file == NULL) {
+		printf("File Could Not Be Found\n");
+		return NULL;
+	}
+	fseek(file, 0, SEEK_END);
+	long length = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	char * final = (char *)malloc(length + 1);
+	for (int i = 0; i < length + 1; ++i) {
+		final[i] = 0;
+	}
+	fread(final, 1, length, file);
+	final[length + 1] = '\0';
+	fclose(file);
+	return final;
 }
 
 void
@@ -362,8 +431,8 @@ keyboard(unsigned char key, int x, int y)
         printf("W         -  Write model to file (out.obj)\n");
         printf("q/escape  -  Quit\n\n");
         break;
-        
-    case 't':
+    
+	case 't':
         stats = !stats;
         break;
         
