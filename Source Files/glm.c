@@ -1206,6 +1206,9 @@ glmLinearTexture(GLMmodel* model)
  *
  * model - pointer to initialized GLMmodel structure
  */
+
+//TODO: CYLINDRICAL COORDINATE
+
 GLvoid
 glmSpheremapTexture(GLMmodel* model)
 {

@@ -129,6 +129,10 @@ lists(void)
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
     
+	//Generate UV Coordinates for the model
+
+	//glmSpheremapTexture(model);
+
     if (model_list)
         glDeleteLists(model_list, 1);
     
@@ -147,7 +151,7 @@ lists(void)
         if (facet_normal)
             model_list = glmList(model, GLM_FLAT | GLM_MATERIAL);
         else
-            model_list = glmList(model, GLM_SMOOTH | GLM_MATERIAL);
+            model_list = glmList(model, GLM_SMOOTH | GLM_TEXTURE);
     }
 }
 
@@ -171,7 +175,8 @@ void loadTexture(const char* filename) {
 	width = *(int*)&(header[0x12]);
 	height = *(int*)&(header[0x16]);
 
-	printf("Width: %d \n Height: %d \n Size: %d", width, height, imageSize);
+	printf("Width: %d \n Height: %d \n Size: %d \n", width, height, imageSize);
+	printf("Tex Coor %d \n", sizeof (model->texcoords));
 
 	//If BMP File is not formatted correctly, format it
 	if (imageSize == 0)
@@ -179,7 +184,7 @@ void loadTexture(const char* filename) {
 	if (dataPosition == 0)
 		dataPosition = 54;
 
-	unsigned char* data = (char *)malloc(imageSize * sizeof(unsigned char));
+	data = (char *)malloc(imageSize * sizeof(unsigned char));
 	//Read the data
 	fread(data, sizeof(unsigned char), imageSize, file);
 	//Close the file
@@ -202,6 +207,32 @@ init(void)
     
     /* create new display lists */
     lists();
+
+	//Generate UV Coordinates for the model
+
+	//glmSpheremapTexture(model);
+
+	//Texture Mapping
+
+	glewInit();
+
+	//Load the Bitmap
+	loadTexture("StoneLowerQuality.bmp");
+	//Enable the texture
+	glEnable(GL_TEXTURE_2D);
+	//Declare ID
+	GLuint texID;
+	//Get ID for the Texture
+	glGenTextures(1, &texID);
+	//Bind the texture with its ID
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+
+	//Set the parameters for the texture
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
@@ -569,7 +600,7 @@ main(int argc, char** argv)
     }
     
     if (!model_file) {
-        model_file = "data/cube2.obj";
+        model_file = "data/PotatoV4.obj";
     }
     
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | buffering);
@@ -619,30 +650,7 @@ main(int argc, char** argv)
     glutAttachMenu(GLUT_RIGHT_BUTTON);
     
     init();
-    
-	//** Texture Mapping Implementation **//
-	/*
-	//Initialize GLEW
-	glewInit();
-
-	//Load the Bitmap
-	loadTexture("StoneLowerQuality.bmp");
-	//Enable the texture
-	glEnable(GL_TEXTURE_2D); 
-	//Declare ID
-	GLuint texID;
-	//Get ID for the Texture
-	glGenTextures(1, &texID);
-	//Bind the texture with its ID
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-
-	//Set the parameters for the texture
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	*/
-
+ 
     glutMainLoop();
     return 0;
 }

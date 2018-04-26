@@ -3,10 +3,8 @@ c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(32): warnin
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(67): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(122): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(123): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(208): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(352): warning C4305: 'function': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(368): warning C4305: '+=': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(391): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(538): warning C4474: 'printf' : too many arguments passed for format string
-  c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(538): note: placeholders and their parameters expect 2 variadic arguments, but 3 were provided
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(274): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(418): warning C4305: 'function': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(434): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(457): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
   PotatoMapping.vcxproj -> C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe
