@@ -1,18 +1,14 @@
-#version 130
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec2 aTexCoord;
 
-in vec4 localVertex;
-in vec4 localVertexNormal;
-in vec2 openglCoor;
-out vec2 fragmentShader;
+out vec3 ourColor;
+out vec2 TexCoord;
 
-uniform mat4 modelMatrix, cameraMatrix, depthMatrix, rotationMatrix;
-uniform vec4 lightVector;
-
-out vec3 fragmentNormal, fragmentLight, fragmentAngle;
-
-void main () {
-  fragmentNormal = (rotationMatrix * localVertexNormal).xyz;
-  fragmentLight = (lightVector).xyz;
-  fragmentAngle = (cameraMatrix * modelMatrix * localVertex).xyz;
-  fragmentShader = openglCoor;
+void main()
+{
+    gl_Position = vec4(aPos, 1.0);
+    ourColor = aColor;
+    TexCoord = aTexCoord;
 }

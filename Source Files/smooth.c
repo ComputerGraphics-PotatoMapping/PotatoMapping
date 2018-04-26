@@ -267,12 +267,12 @@ display(void)
 #endif
     
 	// Important! Pass that data to the shader variables
-	glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, M);
+	/*glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, M);
 	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, V);
 	glUniformMatrix4fv(perspectiveMatrixID, 1, GL_TRUE, P);
 	glUniformMatrix4fv(allRotsMatrixID, 1, GL_TRUE, allRotsMatrix);
 	glUniform4fv(lightID, 1, light);
-	
+	*/
     glDisable(GL_LIGHTING);
     if (bounding_box) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -779,7 +779,28 @@ main(int argc, char** argv)
 
 	//Initialize GLEW
 	glewInit();
-	GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
+
+
+
+
+	//Load the Bitmap
+	int width = -1, height = -1, size = -1;
+	loadBitmap("BrownDirt.bmp", &width, &height, &size, (unsigned char**)&textureData); //Get the data for the bitmap
+	glEnable(GL_TEXTURE_2D); //Enable texture
+	GLuint bitmapID;
+	glGenTextures(1, &bitmapID); //Get ID for texture
+	glBindTexture(GL_TEXTURE_2D, bitmapID); //Bind the textureID
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData);
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	/*GLuint vertexShader, fragmentShader, vertexShaderID, fragmentShaderID, programShaderID;
 	//Create the vertex shader
 	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	const char * vertexSource = loadContents("vShader.vert");
@@ -790,7 +811,7 @@ main(int argc, char** argv)
 	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 	const char * fragmentSource = loadContents("fShader.frag");
 	glShaderSource(fragmentShaderID, 1, (const GLchar **)&fragmentSource, NULL);
-	glCompileShader(fragmentShaderID);
+	glCompileShader(fragmentShaderID);*/
 
 	/*
 	printf("%d\t%d\n" ,vertexSource, fragmentShaderID);
@@ -818,7 +839,7 @@ main(int argc, char** argv)
 	*/
 
 	//Create the shader for the program
-	programShaderID = glCreateProgram();
+	/*programShaderID = glCreateProgram();
 	glAttachShader(programShaderID, vertexShaderID);
 	glAttachShader(programShaderID, fragmentShaderID);
 	glLinkProgram(programShaderID);
@@ -889,7 +910,7 @@ main(int argc, char** argv)
 	//Depth culling
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);*/
 
 	//** **//
 

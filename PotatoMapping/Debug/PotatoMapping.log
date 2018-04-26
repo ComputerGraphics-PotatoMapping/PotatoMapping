@@ -8,6 +8,4 @@ c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(388): warni
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(404): warning C4305: '+=': truncation from 'double' to 'GLfloat'
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(427): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(688): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(782): warning C4101: 'fragmentShader': unreferenced local variable
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(782): warning C4101: 'vertexShader': unreferenced local variable
   PotatoMapping.vcxproj -> C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe
