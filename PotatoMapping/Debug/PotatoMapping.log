@@ -3,8 +3,8 @@ c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(32): warnin
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(116): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(171): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
 c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(172): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(344): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(488): warning C4305: 'function': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(504): warning C4305: '+=': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(527): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
-  PotatoMapping.vcxproj -> C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(347): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(491): warning C4305: 'function': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(507): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(530): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
+LINK : fatal error LNK1168: cannot open C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe for writing

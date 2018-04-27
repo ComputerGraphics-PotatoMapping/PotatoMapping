@@ -311,6 +311,9 @@ init(void)
 
 	glEnable(GL_CULL_FACE);
 
+	//Load the Normal Map
+	loadTexture("StoneNormalMap.bmp");
+
 }
 
 void
