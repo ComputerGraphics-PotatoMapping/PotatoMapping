@@ -263,19 +263,19 @@ char * loadShaders (const char * fileName) {
 void
 init(void)
 {
-    gltbInit(GLUT_LEFT_BUTTON);
-    
-    /* read in the model */
-    model = glmReadOBJ(model_file);
-    scale = glmUnitize(model);
-    glmFacetNormals(model);
-    glmVertexNormals(model, smoothing_angle);
-    
-    if (model->nummaterials > 0)
-        material_mode = 2;
-    
-    /* create new display lists */
-    lists();
+	gltbInit(GLUT_LEFT_BUTTON);
+
+	/* read in the model */
+	model = glmReadOBJ(model_file);
+	scale = glmUnitize(model);
+	glmFacetNormals(model);
+	glmVertexNormals(model, smoothing_angle);
+
+	if (model->nummaterials > 0)
+		material_mode = 2;
+
+	/* create new display lists */
+	lists();
 
 	//Generate UV Coordinates for the model
 
@@ -302,14 +302,15 @@ init(void)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-    
-    glEnable(GL_DEPTH_TEST);
-    
-    glEnable(GL_CULL_FACE);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_CULL_FACE);
+
 }
 
 void
@@ -383,7 +384,7 @@ display(void)
     }
     
     glPopMatrix();
-    
+
     if (stats) {
         /* XXX - this could be done a _whole lot_ faster... */
         int height = glutGet(GLUT_WINDOW_HEIGHT);
