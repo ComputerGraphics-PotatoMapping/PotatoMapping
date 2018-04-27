@@ -1,10 +1,13 @@
 ﻿  smooth.c
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(32): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(116): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(171): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(172): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(344): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(488): warning C4305: 'function': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(504): warning C4305: '+=': truncation from 'double' to 'GLfloat'
-c:\users\samantha garcia\desktop\potatomapping\source files\smooth.c(527): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
-  PotatoMapping.vcxproj -> C:\Users\Samantha Garcia\Desktop\PotatoMapping\Debug\PotatoMapping.exe
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(32): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(119): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(174): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(175): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(215): warning C4033: 'loadTexture' must return a value
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(223): warning C4033: 'loadTexture' must return a value
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(455): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(599): warning C4305: 'function': truncation from 'double' to 'GLfloat'
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(615): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(638): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\renzo\desktop\normalmapping\potatomapping\source files\smooth.c(246): warning C4715: 'loadTexture': not all control paths return a value
+  PotatoMapping.vcxproj -> C:\Users\Renzo\Desktop\normalMapping\PotatoMapping\Debug\PotatoMapping.exe

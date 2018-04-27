@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include "gltb.h"
 #include "glm.h"
 #include "dirent32.h"
@@ -42,13 +42,16 @@ GLdouble   pan_z = 0.0;
 
 GLboolean ourModel = GL_TRUE;
 
-unsigned char bitmapHeader[54];
-unsigned int dataPosition;
-unsigned int width, height;
-unsigned int imageSize;
-unsigned char * data;
+// unsigned char bitmapHeader[54];
 
-//Struct for each vertex
+struct texture {
+	unsigned int dataPosition;
+	unsigned int width, height;
+	unsigned int imageSize;
+	unsigned char * data;
+};
+
+// Struct for each vertex
 struct vertex {
 	GLfloat x, y, z;
 	GLfloat nx, ny, nz;
@@ -179,7 +182,6 @@ lists(void)
     glMaterialf(GL_FRONT, GL_SHININESS, shininess);
     
 	//Generate UV Coordinates for the model
-
 	//glmSpheremapTexture(model);
 
     if (model_list)
@@ -204,7 +206,9 @@ lists(void)
     }
 }
 
-void loadTexture(const char* filename) {
+//////////////////////////////// Section Beginning: File I/O Functions //////////////////////////////////////////////////
+
+struct texture loadTexture(const char* filename) {
 	FILE* file = fopen(filename, "r");
 	if (file == NULL) {
 		printf("File could not be opened\n");
@@ -212,53 +216,91 @@ void loadTexture(const char* filename) {
 	}
 
 	unsigned char header[54];
-	//Check if BMP file
+	
+	//Check if file at the given path is a BMP file
 	if (fread(header, 1, 54, file) != 54) { // If not 54 bytes read : problem
 		printf("Not a correct BMP file\n");
 		return;
 	}
 
-	// Read ints from the byte array
-	dataPosition = *(int*)&(header[0x0A]);
-	imageSize = *(int*)&(header[0x22]);
-	width = *(int*)&(header[0x12]);
-	height = *(int*)&(header[0x16]);
+	struct texture texture;
 
-	printf("Width: %d \n Height: %d \n Size: %d \n", width, height, imageSize);
+	// Read ints from the byte array
+	texture.dataPosition = *(int*)&(header[0x0A]);
+	texture.imageSize = *(int*)&(header[0x22]);
+	texture.width = *(int*)&(header[0x12]);
+	texture.height = *(int*)&(header[0x16]);
+
+	printf("Width: %d \n Height: %d \n Size: %d \n", texture.width, texture.height, texture.imageSize);
 	printf("Tex Coor %d \n", sizeof (model->texcoords));
 
 	//If BMP File is not formatted correctly, format it
-	if (imageSize == 0)
-		imageSize = width * height * 3;
-	if (dataPosition == 0)
-		dataPosition = 54;
+	if (texture.imageSize == 0) { texture.imageSize = texture.width * texture.height * 3; }
+	if (texture.dataPosition == 0) { texture.dataPosition = 54; }
 
-	data = (char *)malloc(imageSize * sizeof(unsigned char));
-	//Read the data
-	fread(data, sizeof(unsigned char), imageSize, file);
-	//Close the file
-	fclose(file);
+	texture.data = (char *)malloc(texture.imageSize * sizeof(unsigned char));
+	fread(texture.data, sizeof(unsigned char), texture.imageSize, file);			  // Read the data
+	fclose(file);													  // Close the file
+
+	return texture;
 }
 
-//Load the contents from the shader files
 char * loadShaders (const char * fileName) {
-	FILE * file = fopen(fileName, "r");
-	if (file == NULL) {
+	FILE* filePointer = fopen(fileName, "r");                         // Opens file and associates with it a stream that can be identified with the pointer returned
+	if (filePointer == NULL) {
 		printf("File Could Not Be Found\n");
 		return NULL;
 	}
-	fseek(file, 0, SEEK_END);
-	long length = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	char * final = (char *)malloc(length + 1);
-	for (int i = 0; i < length + 1; ++i) {
-		final[i] = 0;
+	fseek(filePointer, 0, SEEK_END);                                  // Sets the position indicator associated with the stream to the end of the file
+	long fileLength = ftell(filePointer);                             // Returns the current value of the position indicator of the stream
+	fseek(filePointer, 0, SEEK_SET);                                  // Sets the position indicator associated with the stream to the beginning of the file
+	char* fileContents = (char *)malloc(fileLength + 1);			  // Creates array to store file contents
+	for (int i = 0; i < fileLength + 1; ++i) {						  // Initializing array with default values
+		fileContents[i] = 0;
 	}
-	fread(final, 1, length, file);
-	final[length + 1] = '\0';
-	fclose(file);
-	return final;
+	fread(fileContents, 1, fileLength, filePointer);                  // Reads an array of fileLength elements each one with a size of 1 byte,
+																	  // from the filePointer stream and stores them in the block of memory specified by fileContents
+	fileContents[fileLength + 1] = '\0';                              // Adds terminating character for "C-style" arrays
+	fclose(filePointer);                                              // Closes the filePointer associated stream and disassociates it
+	return fileContents;                                              // Returns the contents of the file
 }
+
+//////////////////////////////// Section Ending: File I/O Functions //////////////////////////////////////////////////
+
+//////////////////////////////// Section Beginning: Shader Functions //////////////////////////////////////////////////
+GLboolean isCompiled(GLint shaderReference) {
+	GLint compiled = 0;                                                   // Initialzes boolean variable
+	glGetShaderiv(shaderReference, GL_COMPILE_STATUS, &compiled);         // Stores a GL_TRUE value if compilation of the shader was successful, GL_FALSE otherwise
+	if (compiled) { return GL_TRUE; }                                     // If compilation was successful
+	return GL_FALSE;                                                      // If compilation was unsuccessful
+}
+
+GLuint createVertexShader(const char* shader) {
+	GLuint vertexShaderReference = glCreateShader(GL_VERTEX_SHADER);                // Creates a vertex shader object
+	glShaderSource(vertexShaderReference, 1, (const GLchar**)&shader, NULL);        // Sets the source code in vertexShaderReference to the source code in shader
+	glCompileShader(vertexShaderReference);                                         // Compiles the source code in vertexShaderReference
+	if (isCompiled(vertexShaderReference)) { return vertexShaderReference; }        // If compilation was successful
+	return -1;                                                                      // If compilation was unsuccessful
+}
+
+GLuint createFragmentShader(const char* shader) {
+	GLuint fragmentShaderReference = glCreateShader(GL_FRAGMENT_SHADER);             // Creates a fragment shader object
+	glShaderSource(fragmentShaderReference, 1, (const GLchar**)&shader, NULL);       // Sets the source code in fragmentShaderReference to the source code in shader
+	glCompileShader(fragmentShaderReference);                                        // Compiles the source code in fragmentShaderReference
+	if (isCompiled(fragmentShaderReference)) { return fragmentShaderReference; }     // If compilation was successful
+	return -1;                                                                       // If compilation was unsuccessful
+}
+
+GLuint createShaderProgram(GLuint vertexShaderReference, GLuint fragmentShaderReference) {
+	GLuint shaderReference = glCreateProgram();                                      // Creates an empty program object and returns a non-zero value for which it can be referenced
+	glAttachShader(shaderReference, vertexShaderReference);                          // Attaches the vertexShaderReference to the shader program
+	glAttachShader(shaderReference, fragmentShaderReference);                        // Attaches the fragmentShaderReference to the shader program
+	glLinkProgram(shaderReference);                                                  // Links the program object. Creates executables for the attached vertex shader and fragment shader
+																					 // that will run on the programmable vertex processor and programmable fragment processor respectively
+	return shaderReference;                                                          // Returns the reference to the shader program
+}
+//////////////////////////////// Section Ending: Shader Functions //////////////////////////////////////////////////
+
 
 void
 init(void)
@@ -278,30 +320,99 @@ init(void)
 	lists();
 
 	//Generate UV Coordinates for the model
-
 	//glmSpheremapTexture(model);
 
-	//Texture Mapping
+	///////////////////////////// Section Beginning: Texture Mapping & Normal Mapping //////////////////////////////
 
 	glewInit();
 
-	//Load the Bitmap
-	loadTexture("StoneLowerQuality.bmp");
-	//Enable the texture
-	glEnable(GL_TEXTURE_2D);
-	//Declare ID
-	GLuint texID;
-	//Get ID for the Texture
-	glGenTextures(1, &texID);
-	//Bind the texture with its ID
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+	char* vertexShaderSourceCode = loadShaders("vShader.vert");
+	char* fragmentShaderSourceCode = loadShaders("fShader.frag");
+	GLuint vertexShaderReference = createVertexShader(vertexShaderSourceCode);
+	GLuint fragmentShaderReference = createFragmentShader(fragmentShaderSourceCode);
+	GLuint shaderProgramReference = createShaderProgram(vertexShaderReference, fragmentShaderReference);
 
-	//Set the parameters for the texture
+	// Loading the texture map
+	struct texture textureMap = loadTexture("StoneLowerQuality.bmp");															// Load the Texture Map
+	glEnable(GL_TEXTURE_2D);																									// If enabled and no fragment shader is active, 
+																																// two-dimensional texturing is performed
+	GLuint textureMapName;																										// Declare Texture Name
+	glGenTextures(1, &textureMapName);																							// Generate texture name
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureMapName);																				// Binds a named texture to a texturing target
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureMap.width, textureMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureMap.data);	// Specifies a two-dimensional image texture
+
+	// Loading the normal map
+	//struct texture normalMap = loadTexture("StoneNormalMap.bmp");															// Load the Texture Map
+	//glEnable(GL_TEXTURE_2D);																								// If enabled and no fragment shader is active, 
+	//																														// two-dimensional texturing is performed
+	//GLuint normalMapName;																									// Declare Texture Name
+	//glGenTextures(1, &normalMapName);																						// Generate texture name
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, normalMapName);																			// Binds a named texture to a texturing target
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.width, normalMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, normalMap.data);	// Specifies a two-dimensional image texture
+
+	// Creating a Vertex Buffer
+	GLuint vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+
+	// Vertex Shader Inputs
+	GLint vertex2 = glGetAttribLocation(shaderProgramReference, "vertex");
+	GLint normal2 = glGetAttribLocation(shaderProgramReference, "normal");
+	GLint texcoord2 = glGetAttribLocation(shaderProgramReference, "texcoord");
+	GLint _tangent2 = glGetAttribLocation(shaderProgramReference, "_tangent");
+	GLint _bitangent2 = glGetAttribLocation(shaderProgramReference, "_bitangent");
+	GLint _normal2 = glGetAttribLocation(shaderProgramReference, "_normal");
+
+	// Vertex Shader Uniforms
+	GLint light_position2 = glGetUniformLocation(shaderProgramReference, "light_position");
+	GLint Projection2 = glGetUniformLocation(shaderProgramReference, "Projection");
+	GLint View2 = glGetUniformLocation(shaderProgramReference, "View");
+	GLint Model2 = glGetUniformLocation(shaderProgramReference, "Model");
+
+	// Fragment Shader Uniforms
+	GLint texture_sample2 = glGetUniformLocation(shaderProgramReference, "texture_sample");
+	GLint normal_sample2 = glGetUniformLocation(shaderProgramReference, "normal_sample");
+	GLint flag2 = glGetUniformLocation(shaderProgramReference, "flag");
+
+
+	//Sets the parameters for the texture
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	//glUseProgram(shaderProgramReference);
+	//glUniform3f(light_position2, light_position.x, light_position.y, light_position.z);
+	//glUniformMatrix4fv(Projection2, 1, GL_FALSE, value_ptr(Projection));
+	//glUniformMatrix4fv(View2, 1, GL_FALSE, value_ptr(View));
+	//glUniformMatrix4fv(Model2, 1, GL_FALSE, value_ptr(Model));
+	//glUniform1i(flag2, (int)normal);
+	//glUniform1i(texture_sample2, 0);
+	//glUniform1i(normal_sample2, 1);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, texture2);
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, texture2normal);
+
+	//glEnableVertexAttribArray(vertex2);
+	//glVertexAttribPointer(vertex2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), 0);
+	//glEnableVertexAttribArray(normal2);
+	//glVertexAttribPointer(normal2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 12);
+	//glEnableVertexAttribArray(texcoord2);
+	//glVertexAttribPointer(texcoord2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 24);
+	//glEnableVertexAttribArray(_tangent2);
+	//glVertexAttribPointer(_tangent2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 36);
+	//glEnableVertexAttribArray(_bitangent2);
+	//glVertexAttribPointer(_bitangent2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 48);
+	//glEnableVertexAttribArray(_normal2);
+	//glVertexAttribPointer(_normal2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 60);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+
+	//glDrawElements(GL_QUADS, 16, GL_UNSIGNED_INT, 0);
+
+	///////////////////////////// Section Ending: Texture Mapping & Normal Mapping //////////////////////////////
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);

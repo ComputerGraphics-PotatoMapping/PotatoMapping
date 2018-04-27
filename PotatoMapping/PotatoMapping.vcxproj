@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Samantha Garcia\Desktop\PotatoMapping\glew\include;C:\Users\Samantha Garcia\Desktop\PotatoMapping\freeglut\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Samantha Garcia\Desktop\PotatoMapping\glew\lib\Release\Win32;C:\Users\Samantha Garcia\Desktop\PotatoMapping\freeglut\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Renzo\Desktop\normalMapping\PotatoMapping\glew\include;C:\Users\Renzo\Desktop\normalMapping\PotatoMapping\freeglut\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Renzo\Desktop\normalMapping\PotatoMapping\glew\lib\Release\win32;C:\Users\Renzo\Desktop\normalMapping\PotatoMapping\freeglut\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
