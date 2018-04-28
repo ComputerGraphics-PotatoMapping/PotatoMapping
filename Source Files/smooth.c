@@ -63,6 +63,7 @@ struct vertex {
 	GLfloat bivecx, bivecy, bivecz;
 	//Normal Vector
 	GLfloat normvecx, normvecy, normvecz;
+	GLfloat pad[14];
 };
 
 //Compute the Tangent Matrix
@@ -333,6 +334,16 @@ init(void)
 	GLuint fragmentShaderReference = createFragmentShader(fragmentShaderSourceCode);											// Creating the Fragment Shader
 	GLuint shaderProgramReference = createShaderProgram(vertexShaderReference, fragmentShaderReference);						// Creating the Shader Program
 
+																																// Loading the normal map
+	struct texture normalMap = loadTexture("StoneNormalMap.bmp");															// Load the Texture Map
+	glEnable(GL_TEXTURE_2D);																								// If enabled and no fragment shader is active, 
+																															//																														// two-dimensional texturing is performed
+	GLuint normalMapName;																									// Declare Texture Name
+	glGenTextures(1, &normalMapName);																						// Generate texture name
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, normalMapName);																			// Binds a named texture to a texturing target
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.width, normalMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, normalMap.data);	// Specifies a two-dimensional image texture
+
 	// Loading the texture map
 	struct texture textureMap = loadTexture("StoneLowerQuality.bmp");															// Load the Texture Map
 	glEnable(GL_TEXTURE_2D);																									// If enabled and no fragment shader is active, 
@@ -342,19 +353,6 @@ init(void)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureMapName);																				// Binds a named texture to a texturing target
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureMap.width, textureMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureMap.data);	// Specifies a two-dimensional image texture
-
-
-	// ------ UNCOMMENTING NORMAL MAP OVERWRITES TEXTURE MAP, POSSIBLE POINTER ISSUE IN loadTexture?
-
-	// Loading the normal map
-	//struct texture normalMap = loadTexture("StoneNormalMap.bmp");															// Load the Texture Map
-	//glEnable(GL_TEXTURE_2D);																								// If enabled and no fragment shader is active, 
-	//																														// two-dimensional texturing is performed
-	//GLuint normalMapName;																									// Declare Texture Name
-	//glGenTextures(1, &normalMapName);																						// Generate texture name
-	//glActiveTexture(GL_TEXTURE0 + 1);
-	//glBindTexture(GL_TEXTURE_2D, normalMapName);																			// Binds a named texture to a texturing target
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.width, normalMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, normalMap.data);	// Specifies a two-dimensional image texture
 
 	//Sets the parameters for the texture
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -409,7 +407,7 @@ init(void)
 
 	// ----- UNCOMMMENTING glUseProgram CAUSES MODEL TO DISSAPPEAR
 
-	//glUseProgram(shaderProgramReference);
+	glUseProgram(shaderProgramReference);
 	
 	// glUniform* passes variables to the specified locations
 
@@ -432,32 +430,32 @@ init(void)
 	glUniform1i(normal_sample2, 1);
 
 	// // Vertex Coordinates
-	//glEnableVertexAttribArray(vertex2);
-	//glVertexAttribPointer(vertex2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), 0);
+	glEnableVertexAttribArray(vertex2);
+	glVertexAttribPointer(vertex2, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), 0);
 	//
 	// // Normal Coordinates
-	//glEnableVertexAttribArray(normal2);
-	//glVertexAttribPointer(normal2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 12);
+	glEnableVertexAttribArray(normal2);
+	glVertexAttribPointer(normal2, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (char *)NULL + 12);
 	//
 	// // Texture Coordinates
-	//glEnableVertexAttribArray(texcoord2);
-	//glVertexAttribPointer(texcoord2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 24);
+	glEnableVertexAttribArray(texcoord2);
+	glVertexAttribPointer(texcoord2, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (char *)NULL + 24);
 	//
 	// // Tangent Vectors
-	//glEnableVertexAttribArray(_tangent2);
-	//glVertexAttribPointer(_tangent2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 36);
+	glEnableVertexAttribArray(_tangent2);
+	glVertexAttribPointer(_tangent2, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (char *)NULL + 36);
 	//
 	// // Bitangent Vectors
-	//glEnableVertexAttribArray(_bitangent2);
-	//glVertexAttribPointer(_bitangent2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 48);
+	glEnableVertexAttribArray(_bitangent2);
+	glVertexAttribPointer(_bitangent2, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (char *)NULL + 48);
 	//
 	// // Normal Vectors
-	//glEnableVertexAttribArray(_normal2);
-	//glVertexAttribPointer(_normal2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 60);
+	glEnableVertexAttribArray(_normal2);
+	glVertexAttribPointer(_normal2, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (char *)NULL + 60);
 	//
-	////glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBuffer);
 
-	////glDrawElements(GL_QUADS, 16, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_QUADS, 16, GL_UNSIGNED_INT, 0);
 
 	///////////////////////////// Section Ending: Texture Mapping & Normal Mapping //////////////////////////////
 
