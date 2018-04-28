@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# easy makefile
+echo '
+.PHONY: all clean_all
+
+all:
+	make -C _build all
+
+clean_all:
+	rm -rf _build; rm Makefile
+
+%:
+	make -C _build $@
+' > Makefile
+
+# cleanup build dir if exist
+rm -rf _build
+
+# create Unix Makefiles project
+mkdir _build && cd _build && cmake ..
+
+echo "\nYou can now run \"make && make test\"\n"
+echo "\nRun \"make cglm_doc\" to generate the doc in the \"build/doc/\" directory.\n"
+

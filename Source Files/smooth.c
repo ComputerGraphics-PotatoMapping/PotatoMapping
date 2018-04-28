@@ -15,6 +15,7 @@
 #include "gltb.h"
 #include "glm.h"
 #include "dirent32.h"
+#include "../cglm/cglm.h"
 
 //#include "MathHelper.h"
 
@@ -326,11 +327,11 @@ init(void)
 
 	glewInit();
 
-	char* vertexShaderSourceCode = loadShaders("vShader.vert");
-	char* fragmentShaderSourceCode = loadShaders("fShader.frag");
-	GLuint vertexShaderReference = createVertexShader(vertexShaderSourceCode);
-	GLuint fragmentShaderReference = createFragmentShader(fragmentShaderSourceCode);
-	GLuint shaderProgramReference = createShaderProgram(vertexShaderReference, fragmentShaderReference);
+	char* vertexShaderSourceCode = loadShaders("vShader.vert");																	// Loading Vertex Shader
+	char* fragmentShaderSourceCode = loadShaders("fShader.frag");																// Loading Fragment Shader
+	GLuint vertexShaderReference = createVertexShader(vertexShaderSourceCode);													// Creating the Vertex Shader
+	GLuint fragmentShaderReference = createFragmentShader(fragmentShaderSourceCode);											// Creating the Fragment Shader
+	GLuint shaderProgramReference = createShaderProgram(vertexShaderReference, fragmentShaderReference);						// Creating the Shader Program
 
 	// Loading the texture map
 	struct texture textureMap = loadTexture("StoneLowerQuality.bmp");															// Load the Texture Map
@@ -342,40 +343,18 @@ init(void)
 	glBindTexture(GL_TEXTURE_2D, textureMapName);																				// Binds a named texture to a texturing target
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureMap.width, textureMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureMap.data);	// Specifies a two-dimensional image texture
 
+
+	// ------ UNCOMMENTING NORMAL MAP OVERWRITES TEXTURE MAP, POSSIBLE POINTER ISSUE IN loadTexture?
+
 	// Loading the normal map
 	//struct texture normalMap = loadTexture("StoneNormalMap.bmp");															// Load the Texture Map
 	//glEnable(GL_TEXTURE_2D);																								// If enabled and no fragment shader is active, 
 	//																														// two-dimensional texturing is performed
 	//GLuint normalMapName;																									// Declare Texture Name
 	//glGenTextures(1, &normalMapName);																						// Generate texture name
-	//glActiveTexture(GL_TEXTURE1);
+	//glActiveTexture(GL_TEXTURE0 + 1);
 	//glBindTexture(GL_TEXTURE_2D, normalMapName);																			// Binds a named texture to a texturing target
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.width, normalMap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, normalMap.data);	// Specifies a two-dimensional image texture
-
-	// Creating a Vertex Buffer
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-
-	// Vertex Shader Inputs
-	GLint vertex2 = glGetAttribLocation(shaderProgramReference, "vertex");
-	GLint normal2 = glGetAttribLocation(shaderProgramReference, "normal");
-	GLint texcoord2 = glGetAttribLocation(shaderProgramReference, "texcoord");
-	GLint _tangent2 = glGetAttribLocation(shaderProgramReference, "_tangent");
-	GLint _bitangent2 = glGetAttribLocation(shaderProgramReference, "_bitangent");
-	GLint _normal2 = glGetAttribLocation(shaderProgramReference, "_normal");
-
-	// Vertex Shader Uniforms
-	GLint light_position2 = glGetUniformLocation(shaderProgramReference, "light_position");
-	GLint Projection2 = glGetUniformLocation(shaderProgramReference, "Projection");
-	GLint View2 = glGetUniformLocation(shaderProgramReference, "View");
-	GLint Model2 = glGetUniformLocation(shaderProgramReference, "Model");
-
-	// Fragment Shader Uniforms
-	GLint texture_sample2 = glGetUniformLocation(shaderProgramReference, "texture_sample");
-	GLint normal_sample2 = glGetUniformLocation(shaderProgramReference, "normal_sample");
-	GLint flag2 = glGetUniformLocation(shaderProgramReference, "flag");
-
 
 	//Sets the parameters for the texture
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -383,34 +362,102 @@ init(void)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	//glUseProgram(shaderProgramReference);
-	//glUniform3f(light_position2, light_position.x, light_position.y, light_position.z);
-	//glUniformMatrix4fv(Projection2, 1, GL_FALSE, value_ptr(Projection));
-	//glUniformMatrix4fv(View2, 1, GL_FALSE, value_ptr(View));
-	//glUniformMatrix4fv(Model2, 1, GL_FALSE, value_ptr(Model));
-	//glUniform1i(flag2, (int)normal);
-	//glUniform1i(texture_sample2, 0);
-	//glUniform1i(normal_sample2, 1);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, texture2);
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, texture2normal);
+	// Creating a Vertex Buffer
+	GLuint vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, 3 * model->numvertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);	// 3x because each vertex has (x,y,z)
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * model->numvertices * sizeof(GLfloat), model->vertices); // Loading vertices to vertex buffer
 
+	// Creating Index Buffer
+	GLuint indexBuffer;
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * model->numtriangles * sizeof(GLfloat), NULL, GL_STATIC_DRAW); // 3x because each triangle has 3 vindices
+
+	// Initializing and Assigning Vertex Shader Inputs Locations
+	GLint vertex2 = 0;
+	vertex2 = glGetAttribLocation(shaderProgramReference, "vertex");
+	GLint normal2 = 0;
+	normal2 = glGetAttribLocation(shaderProgramReference, "normal");
+	GLint texcoord2 = 0;
+	texcoord2 = glGetAttribLocation(shaderProgramReference, "texcoord");
+	GLint _tangent2 = 0;
+	_tangent2 = glGetAttribLocation(shaderProgramReference, "_tangent");
+	GLint _bitangent2 = 0;
+	_bitangent2 = glGetAttribLocation(shaderProgramReference, "_bitangent");
+	GLint _normal2 = 0;
+	_normal2 = glGetAttribLocation(shaderProgramReference, "_normal");
+
+	// Initializing and Assigning Vertex Shader Uniforms Locations
+	GLint light_position2 = 0;
+	light_position2 = glGetUniformLocation(shaderProgramReference, "light_position");
+	GLint Projection2 = 0;
+	Projection2 = glGetUniformLocation(shaderProgramReference, "Projection");
+	GLint View2 = 0;
+	View2 = glGetUniformLocation(shaderProgramReference, "View");
+	GLint Model2 = 0;
+	Model2 = glGetUniformLocation(shaderProgramReference, "Model");
+
+	// Initializing and Assigning Fragment Shader Uniforms Locations
+	GLint texture_sample2 = 0; 
+	texture_sample2 = glGetUniformLocation(shaderProgramReference, "texture_sample");
+	GLint normal_sample2 = 0;
+	normal_sample2 = glGetUniformLocation(shaderProgramReference, "normal_sample");
+	GLint flag2 = 0;	
+	flag2 = glGetUniformLocation(shaderProgramReference, "flag");
+
+	// ----- UNCOMMMENTING glUseProgram CAUSES MODEL TO DISSAPPEAR
+
+	//glUseProgram(shaderProgramReference);
+	
+	// glUniform* passes variables to the specified locations
+
+	CGLMvec3 light_position;
+	light_position.x = 0.0f;
+	light_position.y = 100.0f;
+	light_position.z = 100.0f;
+
+	CGLMmat4 Projection = cglmPerspective(45.0f, (float)1280 / (float)720, 0.1f, 1000.0f); 
+	CGLMmat4 View       = cglmMat4(1.0f);
+	CGLMmat4 Model      = cglmMat4(1.0f);
+	GLint normal = 1;
+
+	glUniform3f(light_position2, light_position.x, light_position.y, light_position.z);
+	glUniformMatrix4fv(Projection2, 1, GL_FALSE, &Projection);
+	glUniformMatrix4fv(View2, 1, GL_FALSE, &View);
+	glUniformMatrix4fv(Model2, 1, GL_FALSE, &Model);
+	glUniform1i(flag2, normal);
+	glUniform1i(texture_sample2, 0);
+	glUniform1i(normal_sample2, 1);
+
+	// // Vertex Coordinates
 	//glEnableVertexAttribArray(vertex2);
 	//glVertexAttribPointer(vertex2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), 0);
+	//
+	// // Normal Coordinates
 	//glEnableVertexAttribArray(normal2);
 	//glVertexAttribPointer(normal2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 12);
+	//
+	// // Texture Coordinates
 	//glEnableVertexAttribArray(texcoord2);
 	//glVertexAttribPointer(texcoord2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 24);
+	//
+	// // Tangent Vectors
 	//glEnableVertexAttribArray(_tangent2);
 	//glVertexAttribPointer(_tangent2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 36);
+	//
+	// // Bitangent Vectors
 	//glEnableVertexAttribArray(_bitangent2);
 	//glVertexAttribPointer(_bitangent2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 48);
+	//
+	// // Normal Vectors
 	//glEnableVertexAttribArray(_normal2);
 	//glVertexAttribPointer(_normal2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_), (char *)NULL + 60);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+	//
+	////glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
 
-	//glDrawElements(GL_QUADS, 16, GL_UNSIGNED_INT, 0);
+	////glDrawElements(GL_QUADS, 16, GL_UNSIGNED_INT, 0);
 
 	///////////////////////////// Section Ending: Texture Mapping & Normal Mapping //////////////////////////////
 
@@ -477,13 +524,6 @@ display(void)
     glCallList(model_list);
 #endif
     
-	// Important! Pass that data to the shader variables
-	/*glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, M);
-	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, V);
-	glUniformMatrix4fv(perspectiveMatrixID, 1, GL_TRUE, P);
-	glUniformMatrix4fv(allRotsMatrixID, 1, GL_TRUE, allRotsMatrix);
-	glUniform4fv(lightID, 1, light);
-	*/
     glDisable(GL_LIGHTING);
     if (bounding_box) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
