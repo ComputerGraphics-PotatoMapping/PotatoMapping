@@ -152,12 +152,12 @@ gltbMotion(int x, int y)
   gltb_angle = 90.0 * sqrt(dx * dx + dy * dy + dz * dz);
 
   /* calculate the axis of rotation (cross product) */
-  gltb_axis[0] = gltb_lastposition[1] * current_position[2] - 
-               gltb_lastposition[2] * current_position[1];
+  // gltb_axis[0] = gltb_lastposition[1] * current_position[2] - 
+  //              gltb_lastposition[2] * current_position[1];
   gltb_axis[1] = gltb_lastposition[2] * current_position[0] - 
                gltb_lastposition[0] * current_position[2];
-  gltb_axis[2] = gltb_lastposition[0] * current_position[1] - 
-               gltb_lastposition[1] * current_position[0];
+  // gltb_axis[2] = gltb_lastposition[0] * current_position[1] - 
+  //              gltb_lastposition[1] * current_position[0];
 
   /* XXX - constrain motion */
   gltb_axis[2] = 0;
